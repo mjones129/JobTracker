@@ -1,0 +1,72 @@
+@page "/jobs"
+@using JobTracker.Data
+@using Microsoft.EntityFrameworkCore
+
+<h3>Add a Job</h3>
+<EditForm Model="@newJob" OnValidSubmit="AddJob" FormName="AddJob">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-2">
+        <label>Title</label>
+        <InputText @bind-Value="newJob.Title" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Description</label>
+        <InputText @bind-Value="newJob.Description" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Location</label>
+        <InputText @bind-Value="newJob.Location" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+<h3>Job Listings</h3>
+
+@if (jobs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!jobs.Any())
+{
+    <p>No jobs found.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var job in jobs)
+        {
+            <li class="list-group-item">
+                <strong>@job.Title</strong>
+                <small>@job.Location • Posted today</small>
+                <p>@job.Description</p>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Job> jobs;
+    private Job newJob = new();
+
+    [Inject] private ApplicationDbContext DbContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        newJob = new Job
+            {
+                Title = string.Empty,
+                Description = string.Empty,
+                Location = string.Empty
+            };
+        jobs = await DbContext.Jobs.ToListAsync();
+    }
+
+    private async Task AddJob()
+    {
+        DbContext.Jobs.Add(newJob);
+        await DbContext.SaveChangesAsync();
+    }
+}

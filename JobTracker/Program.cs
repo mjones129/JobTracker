@@ -43,7 +43,15 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+
+    var historyTableExists = db.Database.ExecuteSqlRaw(
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '__EFMigrationHistory'"
+        ) > 0;
+
+    if ( historyTableExists )
+    {
+        db.Database.Migrate();
+    }
 }
 
 // Configure the HTTP request pipeline.
